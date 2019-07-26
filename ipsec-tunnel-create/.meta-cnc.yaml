@@ -1,0 +1,116 @@
+# skillet preamble information used by panhandler
+# ---------------------------------------------------------------------
+# unique snippet name
+name: ipsec-tunnel-create
+# label used for menu selection
+label: ipsec-tunnel-create
+description: This skillet will take input variables and configure an IPSec Tunnnel and IKE Gateway
+
+# type of device configuration
+# common types are panorama, panos, and template
+# https://github.com/PaloAltoNetworks/panhandler/blob/develop/docs/metadata_configuration.rst
+type: panos
+# preload static or default-based templates
+extends:
+
+# grouping of like snippets for dynamic menu creation in panhandler
+labels:
+  collection:
+    - myCollection
+
+# ---------------------------------------------------------------------
+# end of preamble section
+
+# variables section
+# ---------------------------------------------------------------------
+# variables used in the configuration templates
+# type_hint defines the form field used by panhandler
+# type_hints can be text, ip_address, or dropdown
+variables:
+  - name: hostname
+    description: Firewall hostname
+    default: myFirewall
+    type_hint: text
+  - name: tunnel_interface
+    description: Tunnel Interface tunnel.Number
+    default: tunnel.1
+    type_hint: text
+  - name: tunnel_interface_zone
+    description: Zone applied to the Tunnel Interface (must already exist on the firewall)
+    default: untrust
+    type_hint: text
+  - name: preshared_key
+    description: Preshared Key
+    default: myPresharedKey
+    type_hint: text
+  - name: ike_gateway_name
+    description: Name for the IKE Gateway
+    default: ike-gateway
+    type_hint: text
+  - name: ike_version
+    description: IKE Version
+    default: ike_v1_only
+    type_hint: dropdown
+    dd_list:
+      - key: ike_v1_only
+        value: ikev1
+      - key: ike_v2_only
+        value: ikev2
+      - key: ike_v2_preferred
+        value: ikev2-preferred
+  - name: local_interface_address
+    description: IKE IP address/CIDR of the Local Interface
+    default: 1.1.1.1/24
+    type_hint: text
+  - name: local_interface
+    description: IKE Local Negotiating Interface Name
+    default: ethernet1/1
+    type_hint: text
+  - name: peer_address
+    description: IKE Peer Address
+    default: 2.2.2.2
+    type_hint: text
+  - name: tunnel_route_name
+    description: Name for the Static Tunnel Route Entry
+    default: Tunnel_Route
+    type_hint: text
+  - name: remote_network_tunnel_route
+    description: The Destination Network/CIDR routed into the tunnel interface
+    default: 10.0.0.0/8
+    type_hint: text
+  - name: virtual_router_name
+    description: Name of the virtual router (must already exist)
+    default: default
+    type_hint: text
+  - name: vsys
+    description: Vsys Name
+    default: vsys1
+    type_hint: text
+# ---------------------------------------------------------------------
+# end of variables section
+
+# snippets section
+# ---------------------------------------------------------------------
+# snippets used for api configuration including xpath and element as file name
+# files will load in the order listed
+snippets:
+  - name: tunnel-interface
+    xpath: /config/devices/entry[@name='localhost.localdomain']/network/interface/tunnel/units
+    file: tunnel-interface.xml
+  - name: tunnel-zone
+    xpath: /config/devices/entry[@name='localhost.localdomain']/vsys
+    file: tunnel-zone.xml
+  - name: import.xml
+    xpath: /config/devices/entry[@name='localhost.localdomain']/vsys
+    file: import.xml
+  - name: virtual-router
+    xpath: /config/devices/entry[@name='localhost.localdomain']/network/virtual-router
+    file: virtual-router.xml
+  - name: ike-gateway
+    xpath: /config/devices/entry[@name='localhost.localdomain']/network/ike/gateway
+    file: ike-gateway.xml
+  - name: ipsec-tunnel
+    xpath:  /config/devices/entry[@name='localhost.localdomain']/network
+    file: ipsec-tunnel.xml
+# ---------------------------------------------------------------------
+# end of snippets section
