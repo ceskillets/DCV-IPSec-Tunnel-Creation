@@ -5,11 +5,6 @@
         </pre-shared-key>
     </authentication>
     <protocol>
-        <ikev1>
-            <dpd>
-                <enable>yes</enable>
-            </dpd>
-        </ikev1>
         <ikev2>
             <dpd>
                 <enable>yes</enable>

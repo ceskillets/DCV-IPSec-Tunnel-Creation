@@ -16,7 +16,8 @@ extends:
 # grouping of like snippets for dynamic menu creation in panhandler
 labels:
   collection:
-    - myCollection
+    - IPSEC
+    - Configure
 
 # ---------------------------------------------------------------------
 # end of preamble section
@@ -27,9 +28,9 @@ labels:
 # type_hint defines the form field used by panhandler
 # type_hints can be text, ip_address, or dropdown
 variables:
-  - name: hostname
-    description: Firewall hostname
-    default: myFirewall
+  - name: tunnel_name
+    description: name of ipsec tunnel
+    default: ipsec_tunnel_name
     type_hint: text
   - name: tunnel_interface
     description: Tunnel Interface tunnel.Number
@@ -49,11 +50,9 @@ variables:
     type_hint: text
   - name: ike_version
     description: IKE Version
-    default: ike_v1_only
+    default: ike_v2_preferred
     type_hint: dropdown
     dd_list:
-      - key: ike_v1_only
-        value: ikev1
       - key: ike_v2_only
         value: ikev2
       - key: ike_v2_preferred
