@@ -1,7 +1,7 @@
 # skillet preamble information used by panhandler
 # ---------------------------------------------------------------------
 # unique snippet name
-name: default_ike_crypto_profile
+name: default_ike_crypto_profile_c84f130f-eb38-4638-a2f6-f4dafd5e3355
 # label used for menu selection
 label: default ike crypto profiles
 description: This applies the default crypto profiles for devices that may be missing these elements
@@ -131,5 +131,4 @@ snippets:
          </crypto-profiles>
        </ike>
 
-# ---------------------------------------------------------------------
-# end of snippets section
+

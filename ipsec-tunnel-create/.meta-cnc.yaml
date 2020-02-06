@@ -1,32 +1,16 @@
-# skillet preamble information used by panhandler
-# ---------------------------------------------------------------------
-# unique snippet name
-name: ipsec-tunnel-create
-# label used for menu selection
-label: ipsec-tunnel-create
-description: This skillet will take input variables and configure an IPSec Tunnnel and IKE Gateway
+name: ipsec-tunnel-create_c84f130f-eb38-4638-a2f6-f4dafd5e3355
+label: configure ipsec tunnel with ike gateway and tunnel interface
+description: |
+  This skillet will take input variables and configure an IPSec Tunnnel, IKE Gateway
+  and tunnel interface. IPv4 only
 
-# type of device configuration
-# common types are panorama, panos, and template
-# https://github.com/PaloAltoNetworks/panhandler/blob/develop/docs/metadata_configuration.rst
 type: panos
-# preload static or default-based templates
-extends:
 
-# grouping of like snippets for dynamic menu creation in panhandler
 labels:
   collection:
     - IPSEC
     - Configure
 
-# ---------------------------------------------------------------------
-# end of preamble section
-
-# variables section
-# ---------------------------------------------------------------------
-# variables used in the configuration templates
-# type_hint defines the form field used by panhandler
-# type_hints can be text, ip_address, or dropdown
 variables:
   - name: tunnel_name
     description: name of ipsec tunnel
@@ -59,7 +43,7 @@ variables:
         value: ikev2-preferred
   - name: local_interface_address
     description: IKE IP address/CIDR of the Local Interface
-    default: 1.1.1.1/24
+    default: 192.0.2.1/24
     type_hint: text
   - name: local_interface
     description: IKE Local Negotiating Interface Name
@@ -67,7 +51,7 @@ variables:
     type_hint: text
   - name: peer_address
     description: IKE Peer Address
-    default: 2.2.2.2
+    default: 192.0.2.2
     type_hint: text
   - name: tunnel_route_name
     description: Name for the Static Tunnel Route Entry
@@ -85,31 +69,124 @@ variables:
     description: Vsys Name
     default: vsys1
     type_hint: text
-# ---------------------------------------------------------------------
-# end of variables section
 
-# snippets section
-# ---------------------------------------------------------------------
-# snippets used for api configuration including xpath and element as file name
-# files will load in the order listed
 snippets:
   - name: tunnel-interface
     xpath: /config/devices/entry[@name='localhost.localdomain']/network/interface/tunnel/units
-    file: tunnel-interface.xml
+    element: |-
+      <entry name="{{ tunnel_interface }}"/>
+
   - name: tunnel-zone
     xpath: /config/devices/entry[@name='localhost.localdomain']/vsys
-    file: tunnel-zone.xml
+    element: |-
+      <entry name="{{ vsys }}">
+        <zone>
+          <entry name="{{ tunnel_interface_zone }}">
+            <network>
+              <layer3>
+                  <member>{{ tunnel_interface }}</member>
+              </layer3>
+            </network>
+          </entry>
+        </zone>
+      </entry>
+
   - name: import.xml
     xpath: /config/devices/entry[@name='localhost.localdomain']/vsys
-    file: import.xml
+    element: |-
+      <entry name="{{ vsys }}">
+        <import>
+          <network>
+            <interface>
+              <member>{{ tunnel_interface }}</member>
+            </interface>
+          </network>
+        </import>
+      </entry>
+
   - name: virtual-router
     xpath: /config/devices/entry[@name='localhost.localdomain']/network/virtual-router
     file: virtual-router.xml
+    element: |-
+      <entry name="{{ virtual_router_name }}">
+        <interface>
+          <member>{{ tunnel_interface }}</member>
+        </interface>
+        <routing-table>
+          <ip>
+            <static-route>
+              <entry name="{{ tunnel_route_name }}">
+                <path-monitor>
+                  <enable>no</enable>
+                  <failure-condition>any</failure-condition>
+                  <hold-time>2</hold-time>
+                </path-monitor>
+                <bfd>
+                  <profile>None</profile>
+                </bfd>
+                <interface>{{ tunnel_interface }}</interface>
+                <metric>10</metric>
+                <destination>{{ remote_network_tunnel_route }}</destination>
+                <route-table>
+                  <unicast/>
+                </route-table>
+              </entry>
+            </static-route>
+          </ip>
+        </routing-table>
+      </entry>
+
   - name: ike-gateway
     xpath: /config/devices/entry[@name='localhost.localdomain']/network/ike/gateway
-    file: ike-gateway.xml
+    element: |-
+      <entry name="{{ ike_gateway_name }}">
+          <authentication>
+              <pre-shared-key>
+                  <key>{{ preshared_key }}</key>
+              </pre-shared-key>
+          </authentication>
+          <protocol>
+              <ikev2>
+                  <dpd>
+                      <enable>yes</enable>
+                  </dpd>
+              </ikev2>
+              <version>{{ ike_version }}</version>
+          </protocol>
+          <local-address>
+              <ip>{{ local_interface_address }}</ip>
+              <interface>{{ local_interface }}</interface>
+          </local-address>
+          <protocol-common>
+              <nat-traversal>
+                  <enable>no</enable>
+              </nat-traversal>
+              <fragmentation>
+                  <enable>no</enable>
+              </fragmentation>
+          </protocol-common>
+          <peer-address>
+              <ip>{{ peer_address }}</ip>
+          </peer-address>
+      </entry>
+
   - name: ipsec-tunnel
     xpath:  /config/devices/entry[@name='localhost.localdomain']/network
-    file: ipsec-tunnel.xml
-# ---------------------------------------------------------------------
-# end of snippets section
+    element: |-
+      <tunnel>
+          <ipsec>
+              <entry name="{{ tunnel_name }}">
+                  <auto-key>
+                      <ike-gateway>
+                        <entry name="{{ ike_gateway_name }}"/>
+                      </ike-gateway>
+                  </auto-key>
+                  <tunnel-monitor>
+                      <enable>no</enable>
+                    </tunnel-monitor>
+                  <tunnel-interface>{{ tunnel_interface }}</tunnel-interface>
+              </entry>
+          </ipsec>
+      </tunnel>
+
+
